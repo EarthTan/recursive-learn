@@ -1,5 +1,20 @@
-import { MapLearnClient } from "./MapLearnClient";
+"use client";
 
-export default function Page() {
-  return <MapLearnClient />;
+import { createInitialState } from "@/domain/app-state";
+import { HomePage } from "@/components/HomePage";
+import { NodeDetailPage } from "@/components/NodeDetailPage";
+import { useAppState } from "@/state/app-state-context";
+
+export default function HomePageRoute() {
+  const { rehydrated, state, setState } = useAppState();
+
+  if (!rehydrated) {
+    return null;
+  }
+
+  if (!state) {
+    return <HomePage onStart={(title) => setState(createInitialState(title))} />;
+  }
+
+  return <NodeDetailPage state={state} onStateChange={setState} />;
 }

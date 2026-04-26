@@ -22,7 +22,7 @@ describe("pages", () => {
   it("renders learning map as a tree page", () => {
     const state = createInitialState("Transformer");
     render(<LearningMapPage state={state} onStateChange={() => undefined} />);
-    expect(screen.getByText("Transformer")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Transformer" })).toBeInTheDocument();
     expect(screen.getAllByText("Unmastered").length).toBeGreaterThan(0);
   });
 

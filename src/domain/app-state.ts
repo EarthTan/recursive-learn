@@ -1,6 +1,14 @@
 import { findOrCreateConcept, upsertConceptRelations } from "./concept-network";
-import { appendToNode, createChildNode, createTopicWithRoot } from "./learning-tree";
-import type { Concept, ConceptRelation, ContinueNodeOutput, CreateNodeOutput, LearningNode, Topic } from "./types";
+import { appendToNode, createChildNode, createTopicWithRoot, updateNodeStatus } from "./learning-tree";
+import type {
+  Concept,
+  ConceptRelation,
+  ContinueNodeOutput,
+  CreateNodeOutput,
+  LearningNode,
+  NodeStatus,
+  Topic
+} from "./types";
 
 export type AppState = {
   topics: Topic[];
@@ -10,6 +18,19 @@ export type AppState = {
   activeTopicId: string;
   activeNodeId: string;
 };
+
+export function setNodeMastery(state: AppState, nodeId: string, status: NodeStatus): AppState {
+  return {
+    ...state,
+    nodes: state.nodes.map((node) =>
+      node.id === nodeId ? updateNodeStatus(node, status) : node
+    )
+  };
+}
+
+export function setActiveNodeId(state: AppState, activeNodeId: string): AppState {
+  return { ...state, activeNodeId };
+}
 
 export function createInitialState(topicTitle: string): AppState {
   const session = createTopicWithRoot(topicTitle, `Start learning ${topicTitle}.`);

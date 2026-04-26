@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createInitialState, handleAskResult } from "./app-state";
+import { createInitialState, handleAskResult, setNodeMastery } from "./app-state";
 
 describe("app state", () => {
   it("creates a topic, root node, and empty concept list", () => {
@@ -40,6 +40,13 @@ describe("app state", () => {
     });
     expect(next.nodes).toHaveLength(1);
     expect(next.nodes[0].contentBlocks).toHaveLength(2);
+  });
+
+  it("updates mastery for a node by id", () => {
+    const state = createInitialState("T");
+    const id = state.nodes[0].id;
+    const next = setNodeMastery(state, id, "mastered");
+    expect(next.nodes[0].status).toBe("mastered");
   });
 
   it("adds concept relations for related candidates when creating a child", () => {

@@ -1,6 +1,24 @@
-import { KnowledgeBasePage } from "@/components/KnowledgeBasePage";
-import { createInitialState } from "@/domain/app-state";
+"use client";
 
-export default function Page() {
-  return <KnowledgeBasePage state={createInitialState("Transformer")} />;
+import Link from "next/link";
+import { KnowledgeBasePage } from "@/components/KnowledgeBasePage";
+import { useAppState } from "@/state/app-state-context";
+
+export default function KnowledgeBaseRoutePage() {
+  const { rehydrated, state } = useAppState();
+
+  if (!rehydrated) {
+    return null;
+  }
+  if (!state) {
+    return (
+      <main className="knowledge-page">
+        <p>
+          No session yet. <Link href="/">Start learning</Link> to build concepts.
+        </p>
+      </main>
+    );
+  }
+
+  return <KnowledgeBasePage state={state} />;
 }

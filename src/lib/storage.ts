@@ -11,3 +11,7 @@ export function loadState(): AppState | null {
   const raw = localStorage.getItem(STATE_STORAGE_KEY);
   return raw ? (JSON.parse(raw) as AppState) : null;
 }
+
+export function clearStoredState() {
+  localStorage.removeItem(STATE_STORAGE_KEY);
+}
