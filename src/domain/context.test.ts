@@ -29,6 +29,8 @@ describe("buildAskContext", () => {
 
     expect(context.mode).toBe("create_child_node");
     expect(context.path.map((node) => node.title)).toEqual(["Transformer", "Self-attention"]);
+    expect(context.pathNodes).toHaveLength(2);
+    expect(context.pathNodes[1].title).toBe("Self-attention");
     expect(JSON.stringify(context)).not.toContain("Positional Encoding");
   });
 });

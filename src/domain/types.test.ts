@@ -12,6 +12,7 @@ describe("domain types", () => {
       linkedConceptId: "concept_1",
       title: "Q/K/V",
       contentBlocks: [{ id: "block_1", question: null, answer: "Root answer", createdAt: "2026-04-26T00:00:00.000Z" }],
+      justAskEntries: [],
       status,
       createdAt: "2026-04-26T00:00:00.000Z",
       updatedAt: "2026-04-26T00:00:00.000Z"

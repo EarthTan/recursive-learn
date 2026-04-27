@@ -9,8 +9,8 @@ export const createNodeOutputSchema = z.object({
   relatedConceptCandidates: z.array(z.object({ name: z.string().min(1), relation: relationSchema }))
 });
 
-export const continueNodeOutputSchema = z.object({
-  answer: z.string().min(1),
+/** JSON object after `---ML-META---` in the one-shot streaming protocol (concepts only; title is in `---ML-TITLE---`). */
+export const createChildStreamMetaJsonSchema = z.object({
   conceptCandidate: z.string().min(1).nullable(),
   relatedConceptCandidates: z.array(z.object({ name: z.string().min(1), relation: relationSchema }))
 });

@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
-import { continueNodeOutputSchema, createNodeOutputSchema } from "@/domain/ai-schema";
+import { createNodeOutputSchema } from "@/domain/ai-schema";
 import { buildAskContext } from "@/domain/context";
-import { deepseekContinueNode, deepseekCreateNode } from "@/domain/deepseek-ask";
-import { mockContinueNode, mockCreateNode } from "@/domain/mock-ai";
+import {
+  buildCreateChildMockProtocolString,
+  CreateChildProtocolStreamParser
+} from "@/domain/create-child-stream-protocol";
+import { streamDeepseekCreateChildProtocol, streamDeepseekJustAsk } from "@/domain/deepseek-ask";
+import { mockCreateNode, mockJustAsk } from "@/domain/mock-ai";
 import { DEFAULT_DEEPSEEK_MODEL, type DeepseekModelId } from "@/lib/deepseek-settings";
 import type { AskMode, LearningNode, Topic } from "@/domain/types";
 
@@ -13,6 +17,8 @@ type AskRequest = {
   question: string;
   mode: AskMode;
   relatedConcepts: Array<{ name: string; description: string | null }>;
+  /** 必须传 `true`；本接口仅支持流式响应。 */
+  stream?: boolean;
   /** When empty, falls back to mock answers or DEEPSEEK_API_KEY. */
   deepseek?: { apiKey?: string; model?: DeepseekModelId };
 };
@@ -34,29 +40,101 @@ function resolveDeepseek(
 export async function POST(request: Request) {
   const body = (await request.json()) as AskRequest;
   const question = body.question.trim();
-  if (!question) return NextResponse.json({ error: "Question is required" }, { status: 400 });
+  if (!question) {
+    return NextResponse.json({ error: "Question is required" }, { status: 400 });
+  }
+  if (body.stream !== true) {
+    return NextResponse.json(
+      { error: "本接口只支持流式，请在请求体中设置 stream: true" },
+      { status: 400 }
+    );
+  }
 
   const context = buildAskContext({ ...body, question });
   const ds = resolveDeepseek(body);
-  if (ds) {
-    try {
-      if (body.mode === "create_child_node") {
-        const output = await deepseekCreateNode(context, ds.model, ds.apiKey);
-        return NextResponse.json({ kind: "create_child_node", output });
+  const enc = new TextEncoder();
+  const writeLine = (obj: object, controller: ReadableStreamDefaultController<Uint8Array>) => {
+    controller.enqueue(enc.encode(`${JSON.stringify(obj)}\n`));
+  };
+
+  if (body.mode === "just_ask") {
+    const stream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        try {
+          if (ds) {
+            const full = await streamDeepseekJustAsk(
+              context,
+              ds.model,
+              ds.apiKey,
+              (delta) => writeLine({ t: delta }, controller)
+            );
+            writeLine({ done: true, full }, controller);
+          } else {
+            const text = await mockJustAsk(context);
+            const step = 6;
+            for (let i = 0; i < text.length; i += step) {
+              if (i > 0) {
+                await new Promise((r) => setTimeout(r, 8));
+              }
+              const t = text.slice(i, i + step);
+              writeLine({ t }, controller);
+            }
+            writeLine({ done: true, full: text }, controller);
+          }
+          controller.close();
+        } catch (e) {
+          const message = e instanceof Error ? e.message : "Request failed";
+          writeLine({ err: message }, controller);
+          controller.close();
+        }
       }
-      const output = await deepseekContinueNode(context, ds.model, ds.apiKey);
-      return NextResponse.json({ kind: "continue_here", output });
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "DeepSeek request failed";
-      return NextResponse.json({ error: message }, { status: 502 });
-    }
+    });
+    return new Response(stream, {
+      headers: { "Content-Type": "application/x-ndjson; charset=utf-8" }
+    });
   }
 
   if (body.mode === "create_child_node") {
-    const output = createNodeOutputSchema.parse(await mockCreateNode(context));
-    return NextResponse.json({ kind: "create_child_node", output });
+    const stream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        try {
+          if (ds) {
+            const output = await streamDeepseekCreateChildProtocol(
+              context,
+              ds.model,
+              ds.apiKey,
+              (delta) => {
+                if (delta) writeLine({ t: delta }, controller);
+              },
+              (title) => writeLine({ title }, controller)
+            );
+            writeLine({ done: true, output }, controller);
+          } else {
+            const out = createNodeOutputSchema.parse(await mockCreateNode(context));
+            const text = buildCreateChildMockProtocolString(out);
+            const p = new CreateChildProtocolStreamParser((title) => writeLine({ title }, controller));
+            for (let i = 0; i < text.length; i += 1) {
+              if (i > 0 && i % 6 === 0) {
+                await new Promise((r) => setTimeout(r, 8));
+              }
+              const d = p.append(text[i]!);
+              if (d) writeLine({ t: d }, controller);
+            }
+            const parsed = p.finish();
+            writeLine({ done: true, output: parsed }, controller);
+          }
+          controller.close();
+        } catch (e) {
+          const message = e instanceof Error ? e.message : "Request failed";
+          writeLine({ err: message }, controller);
+          controller.close();
+        }
+      }
+    });
+    return new Response(stream, {
+      headers: { "Content-Type": "application/x-ndjson; charset=utf-8" }
+    });
   }
 
-  const output = continueNodeOutputSchema.parse(await mockContinueNode(context));
-  return NextResponse.json({ kind: "continue_here", output });
+  return NextResponse.json({ error: "Invalid mode" }, { status: 400 });
 }

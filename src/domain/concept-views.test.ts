@@ -23,6 +23,7 @@ describe("concept view helpers", () => {
       linkedConceptId: "a",
       title: "N1",
       contentBlocks: [],
+      justAskEntries: [],
       status: "unmastered",
       createdAt: "x",
       updatedAt: "x"

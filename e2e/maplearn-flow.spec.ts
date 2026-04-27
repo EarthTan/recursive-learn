@@ -17,7 +17,7 @@ test.beforeEach(async ({ page }) => {
 // Session rehydration from localStorage is flaky with `next start` in this project’s stack (client UI “Start
 // learning” does not always move off the home hero; see playwright.config). Skip until that interaction is
 // stabilized or a stable seed/URL strategy is added.
-test.skip("learner can choose create child node or continue here", async ({ page }) => {
+test.skip("learner can choose create child node or just ask", async ({ page }) => {
   await page.goto("/");
   const topicInput = page.getByPlaceholder("What do you want to learn?");
   await expect(topicInput).toBeVisible({ timeout: 60_000 });
@@ -30,8 +30,8 @@ test.skip("learner can choose create child node or continue here", async ({ page
   await page.getByRole("button", { name: "Create child node" }).nth(1).click();
   await expect(page.getByRole("heading", { level: 1, name: "Q/K/V" })).toBeVisible({ timeout: 20_000 });
 
-  await page.getByRole("button", { name: "Continue here" }).click();
+  await page.getByRole("button", { name: "Just ask" }).first().click();
   await page.getByLabel("Ask a question").fill("Give me an example");
-  await page.getByRole("button", { name: "Ask here" }).click();
+  await page.locator("form").getByRole("button", { name: "Just ask" }).click();
   await expect(page.getByText("Give me an example")).toBeVisible();
 });

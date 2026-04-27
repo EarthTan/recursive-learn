@@ -32,6 +32,7 @@ export function createTopicWithRoot(title: string, answer: string): LearningSess
         createdAt: timestamp
       }
     ],
+    justAskEntries: [],
     status: "unmastered",
     createdAt: timestamp,
     updatedAt: timestamp
@@ -42,6 +43,37 @@ export function createTopicWithRoot(title: string, answer: string): LearningSess
     nodes: [rootNode],
     activeNodeId: rootNode.id
   };
+}
+
+/**
+ * A minimal child with empty body, used to navigate immediately while the answer is streamed in.
+ */
+export function createPlaceholderChildNode(
+  nodes: LearningNode[],
+  parentId: string,
+  question: string
+): { nodes: LearningNode[]; child: LearningNode } {
+  const parent = nodes.find((n) => n.id === parentId);
+  if (!parent) {
+    throw new Error(`Missing parent node ${parentId}`);
+  }
+  const timestamp = nowIso();
+  const title = question.length > 52 ? `${question.slice(0, 49)}…` : question;
+  const child: LearningNode = {
+    id: createId("node"),
+    topicId: parent.topicId,
+    parentNodeId: parent.id,
+    linkedConceptId: null,
+    title,
+    contentBlocks: [
+      { id: createId("block"), question, answer: "", createdAt: timestamp }
+    ],
+    justAskEntries: [],
+    status: "unmastered",
+    createdAt: timestamp,
+    updatedAt: timestamp
+  };
+  return { nodes: [...nodes, child], child };
 }
 
 export function createChildNode(parent: LearningNode, output: CreateNodeOutput): LearningNode {
@@ -61,9 +93,35 @@ export function createChildNode(parent: LearningNode, output: CreateNodeOutput):
         createdAt: timestamp
       }
     ],
+    justAskEntries: [],
     status: "unmastered",
     createdAt: timestamp,
     updatedAt: timestamp
+  };
+}
+
+export function appendJustAskEntry(node: LearningNode, question: string, answer: string): LearningNode {
+  const timestamp = nowIso();
+  return {
+    ...node,
+    justAskEntries: [
+      ...(node.justAskEntries ?? []),
+      {
+        id: createId("ja"),
+        question,
+        answer,
+        createdAt: timestamp
+      }
+    ],
+    updatedAt: timestamp
+  };
+}
+
+export function removeJustAskEntry(node: LearningNode, entryId: string): LearningNode {
+  return {
+    ...node,
+    justAskEntries: (node.justAskEntries ?? []).filter((e) => e.id !== entryId),
+    updatedAt: nowIso()
   };
 }
 

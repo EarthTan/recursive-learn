@@ -1,15 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import Link from "next/link";
 import type { AppState } from "@/domain/app-state";
-import { setActiveNodeId, setNodeMastery } from "@/domain/app-state";
-import { getChildrenOf, getRootNode, matchesNodeFilter, orderNodesDepthFirst } from "@/domain/topic-tree";
-import type { LearningNode } from "@/domain/types";
+import { setActiveNodeId, setActiveTopicById, setNodeMastery } from "@/domain/app-state";
+import { getChildrenOf, getRootNode } from "@/domain/topic-tree";
 import { IconClose, IconExternalLink, IconNodeCard } from "./Icons";
-
-const treeBg =
-  "bg-[radial-gradient(circle,_#d5dde8_1px,transparent_1px),#fafbfd] bg-[length:22px_22px]";
+import { TopicNodeTreeView } from "./TopicNodeTreeView";
 
 const filterBtn = (on: boolean) =>
   [
@@ -19,29 +16,53 @@ const filterBtn = (on: boolean) =>
 
 export function LearningMapPage({
   state,
-  onStateChange
+  onStateChange,
+  mapTopicId
 }: {
   state: AppState;
   onStateChange: (state: AppState) => void;
+  /** When set (e.g. from `/maps/[topicId]`), show this topic even before global `activeTopicId` catches up, and align session to it. */
+  mapTopicId?: string;
 }) {
-  const topic = state.topics.find((t) => t.id === state.activeTopicId) ?? state.topics[0];
-  const [filter, setFilter] = useState<"all" | "unmastered" | "mastered">("all");
+  const topic =
+    state.topics.find((t) => t.id === (mapTopicId ?? state.activeTopicId)) ?? state.topics[0];
   const [q, setQ] = useState("");
-  const [selectedId, setSelectedId] = useState(state.activeNodeId);
   const [panelOpen, setPanelOpen] = useState(true);
 
-  const ordered = useMemo(
-    () => (topic ? orderNodesDepthFirst(state.nodes, topic.id) : []),
-    [state.nodes, topic]
-  );
-  const visible = useMemo(() => {
-    return ordered.filter(
-      (n) =>
-        matchesNodeFilter(n, filter) && n.title.toLowerCase().includes(q.trim().toLowerCase())
-    );
-  }, [ordered, filter, q]);
+  useLayoutEffect(() => {
+    let next = state;
+    if (mapTopicId && state.activeTopicId !== mapTopicId) {
+      next = setActiveTopicById(state, mapTopicId);
+    }
+    const tid = mapTopicId ?? next.activeTopicId;
+    const a = next.nodes.find((n) => n.id === next.activeNodeId);
+    if (a && a.topicId === tid) {
+      if (next !== state) {
+        onStateChange(next);
+      }
+      return;
+    }
+    const r = getRootNode(next.nodes, tid);
+    if (r) {
+      if (r.id === next.activeNodeId) {
+        if (next !== state) {
+          onStateChange(next);
+        }
+        return;
+      }
+      onStateChange(setActiveNodeId(next, r.id));
+      return;
+    }
+    if (next !== state) {
+      onStateChange(next);
+    }
+  }, [mapTopicId, state, onStateChange]);
 
-  const selected = state.nodes.find((n) => n.id === selectedId) ?? state.nodes[0];
+  const selected = topic
+    ? state.nodes.find((n) => n.id === state.activeNodeId && n.topicId === topic.id) ??
+      getRootNode(state.nodes, topic.id) ??
+      state.nodes[0]
+    : state.nodes[0];
   const parent =
     selected?.parentNodeId && topic
       ? state.nodes.find((n) => n.id === selected.parentNodeId)
@@ -58,7 +79,7 @@ export function LearningMapPage({
   return (
     <main className="mx-auto max-w-[1320px] px-10 pb-12 pt-6">
       <nav className="mb-2 text-[0.88rem]" aria-label="Breadcrumb">
-        <Link className="font-medium text-ml-blue no-underline hover:underline" href={`/maps/${topic.id}`}>
+        <Link className="font-medium text-ml-blue no-underline hover:underline" href="/maps">
           Learning Map
         </Link>
         <span className="mx-2 text-ml-muted">&gt;</span>
@@ -74,86 +95,26 @@ export function LearningMapPage({
         ].join(" ")}
       >
         <div className="flex min-h-[520px] flex-col overflow-hidden rounded-ml border border-ml-line bg-ml-card shadow-ml-card">
-          <div className="flex flex-wrap items-center gap-5 border-b border-ml-line bg-ml-toolbar px-5 py-4">
+          <div className="flex flex-wrap items-center border-b border-ml-line bg-ml-toolbar px-5 py-4">
             <input
               type="search"
               aria-label="Search nodes"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search nodes…"
-              className="min-w-[200px] flex-1 rounded-full border border-ml-line bg-ml-card px-3.5 py-2.5"
+              className="w-full min-w-0 rounded-full border border-ml-line bg-ml-card px-3.5 py-2.5"
             />
-            <div className="flex items-center gap-2.5">
-              <span className="text-[0.88rem] text-ml-muted">Filter:</span>
-              <div
-                className="inline-flex overflow-hidden rounded-full border border-ml-line"
-                role="group"
-                aria-label="Node filters"
-              >
-                <button type="button" className={filterBtn(filter === "all")} onClick={() => setFilter("all")}>
-                  All
-                </button>
-                <button
-                  type="button"
-                  className={filterBtn(filter === "unmastered")}
-                  onClick={() => setFilter("unmastered")}
-                >
-                  Unmastered
-                </button>
-                <button
-                  type="button"
-                  className={filterBtn(filter === "mastered")}
-                  onClick={() => setFilter("mastered")}
-                >
-                  Mastered
-                </button>
-              </div>
-            </div>
           </div>
-          <section
-            className={`min-h-0 flex-1 border-0 p-6 pb-8 ${treeBg}`}
-            aria-label="Topic tree"
-          >
-            <ul className="m-0 list-none p-0">
-              {visible.map((n) => (
-                <li
-                  key={n.id}
-                  className="relative mb-3 list-none"
-                  style={{ marginLeft: depthForNode(n, state.nodes, topic.id) * 24 }}
-                >
-                  <button
-                    type="button"
-                    className={[
-                      "flex max-w-[420px] w-[calc(100%-8px)] cursor-pointer items-start gap-3 rounded-ml-sm border",
-                      "bg-ml-card p-3.5 text-left shadow-ml-card hover:border-ml-hairline",
-                      n.id === selectedId ? "border-ml-blue shadow-ml-node" : "border-ml-line"
-                    ].join(" ")}
-                    onClick={() => {
-                      setSelectedId(n.id);
-                      onStateChange(setActiveNodeId(state, n.id));
-                      setPanelOpen(true);
-                    }}
-                  >
-                    <span className="shrink-0 text-ml-blue" aria-hidden>
-                      <IconNodeCard />
-                    </span>
-                    <span className="flex flex-col gap-1.5">
-                      <span className="font-semibold">{n.title}</span>
-                      <span className="inline-flex items-center gap-1.5 text-[0.82rem] text-ml-muted">
-                        <span
-                          className={[
-                            "h-2 w-2 rounded-full",
-                            n.status === "mastered" ? "bg-ml-green" : "bg-ml-blue"
-                          ].join(" ")}
-                        />
-                        {n.status === "mastered" ? "Mastered" : "Unmastered"}
-                      </span>
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <TopicNodeTreeView
+            state={state}
+            topicId={topic.id}
+            q={q}
+            selectedId={selected.id}
+            onSelect={(id) => {
+              onStateChange(setActiveNodeId(state, id));
+              setPanelOpen(true);
+            }}
+          />
         </div>
 
         {selected ? (
@@ -247,21 +208,4 @@ export function LearningMapPage({
       </div>
     </main>
   );
-}
-
-function depthForNode(node: LearningNode, nodes: LearningNode[], topicId: string): number {
-  const root = getRootNode(nodes, topicId);
-  if (!root) return 0;
-  let d = 0;
-  let current: LearningNode | undefined = node;
-  const seen = new Set<string>();
-  while (current && current.id !== root.id) {
-    if (seen.has(current.id)) return d;
-    seen.add(current.id);
-    d++;
-    const parentId: string | null = current.parentNodeId;
-    if (!parentId) break;
-    current = nodes.find((n) => n.id === parentId);
-  }
-  return d;
 }

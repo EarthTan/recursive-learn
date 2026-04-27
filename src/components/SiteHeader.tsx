@@ -38,7 +38,7 @@ export function SiteHeader() {
     };
   }, []);
 
-  const mapHref = state ? `/maps/${state.activeTopicId}` : "/";
+  const mapHref = state ? "/maps" : "/";
 
   const learningMapActive =
     path.startsWith("/maps") || path.startsWith("/nodes") || (path === "/" && Boolean(state));

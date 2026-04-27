@@ -7,6 +7,7 @@ function node(overrides: Partial<LearningNode> & Pick<LearningNode, "id" | "topi
     title: "T",
     linkedConceptId: null,
     contentBlocks: [],
+    justAskEntries: [],
     status: "unmastered",
     createdAt: "x",
     updatedAt: "x",

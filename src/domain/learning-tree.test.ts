@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  appendJustAskEntry,
   appendToNode,
   createChildNode,
   createTopicWithRoot,
   getNodePath,
+  removeJustAskEntry,
   updateNodeStatus
 } from "./learning-tree";
 import type { CreateNodeOutput, LearningNode } from "./types";
@@ -77,9 +79,33 @@ describe("learning tree domain", () => {
         createdAt: expect.any(String)
       }
     ]);
+    expect(child.justAskEntries).toEqual([]);
   });
 
-  it("appends continued learning content to the same node", () => {
+  it("appends a just-ask exchange without touching map content", () => {
+    const session = createTopicWithRoot("Transformers", "A transformer is a neural network architecture.");
+
+    const updated = appendJustAskEntry(session.nodes[0], "Quick question?", "Quick answer.");
+
+    expect(updated.contentBlocks).toHaveLength(1);
+    expect(updated.justAskEntries).toHaveLength(1);
+    expect(updated.justAskEntries[0]).toEqual({
+      id: expect.stringMatching(/^ja_[A-Za-z0-9_-]{8}$/),
+      question: "Quick question?",
+      answer: "Quick answer.",
+      createdAt: expect.any(String)
+    });
+  });
+
+  it("removes a just-ask entry by id", () => {
+    const session = createTopicWithRoot("T", "root");
+    const withJa = appendJustAskEntry(session.nodes[0], "Q?", "A.");
+    const id = withJa.justAskEntries[0]!.id;
+    const pruned = removeJustAskEntry(withJa, id);
+    expect(pruned.justAskEntries).toHaveLength(0);
+  });
+
+  it("appends another Q&A block to the same node", () => {
     const session = createTopicWithRoot("Transformers", "A transformer is a neural network architecture.");
 
     const updated = appendToNode(session.nodes[0], "How does attention work?", "It weights context by relevance.");

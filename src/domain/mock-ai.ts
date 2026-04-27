@@ -1,5 +1,5 @@
 import type { AskContext } from "./context";
-import type { ContinueNodeOutput, CreateNodeOutput } from "./types";
+import type { CreateNodeOutput } from "./types";
 
 export async function mockCreateNode(context: AskContext): Promise<CreateNodeOutput> {
   if (context.question.toLowerCase().includes("q/k/v")) {
@@ -18,10 +18,6 @@ export async function mockCreateNode(context: AskContext): Promise<CreateNodeOut
   };
 }
 
-export async function mockContinueNode(context: AskContext): Promise<ContinueNodeOutput> {
-  return {
-    answer: `Here is a continued explanation with an example for: ${context.question}`,
-    conceptCandidate: null,
-    relatedConceptCandidates: []
-  };
+export async function mockJustAsk(context: AskContext): Promise<string> {
+  return `Here is a direct answer for: ${context.question}`;
 }

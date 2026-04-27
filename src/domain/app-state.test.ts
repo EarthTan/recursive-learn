@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createInitialState, handleAskResult, setNodeMastery } from "./app-state";
+import { addChildNodeFromJustAsk, createInitialState, handleAskResult, setNodeMastery } from "./app-state";
 
 describe("app state", () => {
   it("creates a topic, root node, and empty concept list", () => {
@@ -27,19 +27,47 @@ describe("app state", () => {
     expect(next.concepts.some((concept) => concept.name === "Q/K/V")).toBe(true);
   });
 
-  it("continues current node without changing node count", () => {
+  it("adds a child from just-ask Q&A without a second API call", () => {
+    const state = createInitialState("Transformer");
+    const rootId = state.nodes[0].id;
+    const next = addChildNodeFromJustAsk(state, rootId, "What is X?", "X is Y", null);
+    expect(next.nodes).toHaveLength(2);
+    expect(next.activeNodeId).toBe(next.nodes[1].id);
+    const child = next.nodes[1];
+    expect(child.parentNodeId).toBe(rootId);
+    expect(child.contentBlocks[0]).toMatchObject({
+      question: "What is X?",
+      answer: "X is Y"
+    });
+  });
+
+  it("removes the promoted 随问 entry on the parent", () => {
+    const state0 = createInitialState("Transformer");
+    const withAsk = handleAskResult(state0, {
+      mode: "just_ask",
+      question: "What is X?",
+      answer: "X is Y"
+    });
+    const rootId = withAsk.nodes[0].id;
+    const entryId = withAsk.nodes[0].justAskEntries[0]!.id;
+    const next = addChildNodeFromJustAsk(withAsk, rootId, "What is X?", "X is Y", entryId);
+    expect(next.nodes[0].justAskEntries).toHaveLength(0);
+  });
+
+  it("just ask stores the exchange on the current node without changing map content or adding a child", () => {
     const state = createInitialState("Transformer");
     const next = handleAskResult(state, {
-      mode: "continue_here",
+      mode: "just_ask",
       question: "Give an example",
-      output: {
-        answer: "Example answer",
-        conceptCandidate: null,
-        relatedConceptCandidates: []
-      }
+      answer: "Example answer"
     });
     expect(next.nodes).toHaveLength(1);
-    expect(next.nodes[0].contentBlocks).toHaveLength(2);
+    expect(next.nodes[0].contentBlocks).toHaveLength(1);
+    expect(next.nodes[0].justAskEntries).toHaveLength(1);
+    expect(next.nodes[0].justAskEntries[0]).toMatchObject({
+      question: "Give an example",
+      answer: "Example answer"
+    });
   });
 
   it("updates mastery for a node by id", () => {
