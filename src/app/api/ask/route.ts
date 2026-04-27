@@ -8,6 +8,7 @@ import {
   toClientWebSources,
   type WebSearchResult
 } from "@/domain/web-search";
+import { enforceAskRateLimit } from "@/lib/ask-rate-limit";
 import { defaultModelForProvider, type LlmProviderId } from "@/lib/deepseek-settings";
 import type { AskMode, LearningNode } from "@/domain/types";
 
@@ -103,6 +104,9 @@ function resolveLlm(body: AskRequest): LlmRouting | null {
 }
 
 export async function POST(request: Request) {
+  const limited = await enforceAskRateLimit(request);
+  if (limited) return limited;
+
   const body = (await request.json()) as AskRequest;
   const question = body.question.trim();
   if (!question) {

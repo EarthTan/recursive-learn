@@ -10,7 +10,8 @@ const ASK_ERR: Partial<Record<string, MessageKey>> = {
   tavily_api_key_required: "askWebSearchTavilyKeyRequired",
   question_required: "askQuestionRequired",
   stream_required: "askStreamOnly",
-  invalid_mode: "askInvalidMode"
+  invalid_mode: "askInvalidMode",
+  rate_limited: "askRateLimited"
 };
 
 /**

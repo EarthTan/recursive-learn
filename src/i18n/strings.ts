@@ -165,6 +165,8 @@ const en = {
   askQuestionRequired: "Question is required",
   askStreamOnly: "This endpoint only supports streaming. Set stream: true in the request body.",
   askInvalidMode: "Invalid request mode",
+  askRateLimited:
+    "Too many questions from this network in a short time. Please try again later.",
   askWebSearchFailed: "Web search failed",
   nodeDeleteTitle: "Delete node?",
   nodeDeleteBody:
@@ -374,6 +376,8 @@ const zh: { [K in keyof typeof en]: string } = {
   askQuestionRequired: "问题不能为空。",
   askStreamOnly: "本接口只支持流式，请在请求体中设置 stream: true。",
   askInvalidMode: "无效的请求模式。",
+  askRateLimited:
+    "当前网络提问过于频繁，请稍后再试。",
   askWebSearchFailed: "联网搜索失败",
   nodeDeleteTitle: "删除节点？",
   nodeDeleteBody: "将删除此节点及其下所有子节点，此操作无法撤销。",

@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "recursive-learn",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-04-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "kv_namespaces": [
+    {
+      "binding": "RATE_LIMIT",
+      "id": "945717c298384b1d8a741e4df07bc6e7"
+    }
+  ],
+  "vars": {
+    "ASK_RL_PER_MINUTE": "5",
+    "ASK_RL_PER_DAY": "30"
+  }
+}
