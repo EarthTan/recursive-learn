@@ -1,83 +1,88 @@
-# Recursive Learn（递归学习）
+# Recursive Learn
 
-用 AI 学东西时，常见情况是：它答一长段，你对其中某个概念不懂，再问，新回答里又有不懂的词，继续问——很像**沿着不懂之处一路往下问**，直到每个环节都清楚。本应用就是为这种**递归式追问**设计的：把问题留痕、排成树，并对每个节点**标记是否掌握**，方便你像深度优先一样啃完一条线，再随时回到树上任意位置。
-
----
-
-## 理念
-
-- **追问链优先于一次性长文**：学习单元是「问题 → 回答 → 子问题」，而不是单篇摘要。
-- **掌握度显式化**：每个节点可以标为已掌握或未掌握，让「哪里还没真懂」一目了然。
-- **结构可回访**：同一主题下的追问会组成一棵**问题树**（按根节点形成学习会话），你不会 lose 在无限轮对话里。
+When you learn with AI, you often skim a long answer, hit an unfamiliar concept, dig in, find another fuzzy term—and keep branching **down along what you do not yet understand** until each step is clear. **Recursive Learn** supports that workflow: questions become a **traceable tree**, each node can be marked **learned vs. not**, so you can deep-dive along one branch first, then jump back anywhere on the tree.
 
 ---
 
-## 能做什么
+## Principles
 
-| 能力 | 说明 |
-|------|------|
-| 从主题入门 | 在首页输入想学的主题，开始第一个「根节点」，由模型生成回答（可选联网搜索辅助）。 |
-| 继续追问 | 在节点里对不懂处**新建子节点**，把追问写进树形结构；也可用 **Just ask（随便问问）** 在同一节点上留临时问答，不必立刻分叉。 |
-| 会话与全树 | **Sessions（学习会话）** 下列出各根主题；进入某一根可打开**整棵树**的视图，浏览、搜索、跳转节点。 |
-| 全局搜索 | 在 **Search** 里按关键词跨会话查找节点并打开。 |
-| 数据在本地 | 学习数据存在本机浏览器的 IndexedDB；可在 **Settings** 里导出 / 导入 JSON 备份。 |
-| 模型与搜索 | 在 **Settings** 中配置所用大模型厂商与 API Key；可选配置联网搜索（如 Tavily / Brave / Exa 等），Key 保存在浏览器，请求经本应用服务端再转发到供应商（也可在服务端用环境变量配置）。 |
+- **Follow-up chains beat one-shot walls of text.** The unit of learning is *question → answer → follow-up*, not a single dense summary.
+- **Mastery is explicit.** Nodes can be tagged so you always see **what still needs work**.
+- **Structure survives revisits.** Under one topic, threads form an **exploration tree** (rooted learning sessions)—you are less likely to get lost than in endless flat chat transcripts.
 
 ---
 
-## 使用方式
+## What you can do
 
-1. **安装与运行**（需 Node.js）  
+| Capability | Description |
+|------------|-------------|
+| Start from a topic | On the home page, enter a topic to create a **root node**; the model answers with optional web search |
+| Drill down | Ask a **follow-up** where you are stuck; create a **child node** so the thread stays structured, or use **Just ask** for a quick sidebar without branching immediately |
+| Sessions & full tree | **Sessions** lists each root topic; open one session to browse the **full tree**, jump between nodes |
+| Search | **Search** finds nodes across sessions by keyword and opens them |
+| Local-first data | Learning data stays in **IndexedDB** on your machine; **Settings** lets you export / import JSON backups |
+| Model & search | Configure provider and API keys under **Settings**; optional web search (e.g. Tavily, Brave, Exa—keys stored in the browser). Requests **can** route through **your deployed** app server before reaching vendors (environment variables supported on the server) |
+
+---
+
+## Getting started
+
+1. **Install and run** (Node.js required):
+
    ```bash
    npm install
    npm run dev
-   ```  
-   浏览器打开开发地址（一般为 `http://localhost:3000`）。
+   ```
 
-2. **配置密钥**  
-   打开 **Settings**，选择 LLM 提供商并填写 API Key（或确保服务器环境已配置）；需要联网检索时再填搜索相关 Key。保存。
+   Open the app in your browser (usually `http://localhost:3000`).
 
-3. **开始一条学习线**  
-   在首页输入主题，点击「开始学习」。进入节点后阅读回答，在下方提出**下一个具体问题**；若希望把问题记为树上的分支，选择**创建子节点**；若只想先记一条旁路问答，用 **Just ask**。
+2. **Configure keys.** Open **Settings**, pick an LLM provider and enter an API Key (or rely on server-side env). Add search keys only if you need live web retrieval. Save.
 
-4. **标记掌握度**  
-   在节点上把当前内容标为**已掌握**或**未掌握**，便于你安排接下来要钻哪一条分支。
+3. **Begin a thread.** Enter a topic and start learning; read the answer and ask the **next concrete question** beneath it. Branch with **create child**, or use **Just ask** for a lightweight Q&A without a new branch yet.
 
-5. **管理多条主题**  
-   通过导航中的 **Sessions** 查看所有根节点，可新建根、打开某棵树的**全树**视图、或删除整棵会话树（删除前请确认）。
+4. **Mark mastery.** Mark nodes as mastered or still open so next steps stay obvious.
 
-6. **备份**  
-   换浏览器、清站点数据或换机器前，在 **Settings → 数据管理** 中**导出 JSON**；新环境**导入**即可恢复。
+5. **Jump between themes.** Use **Sessions** to list roots, open a tree view, create new roots, or delete a whole tree (confirm before destructive actions).
 
-7. **语言**  
-   页眉中可切换界面 **中文 / English**（与模型回答语言无关，回答语言由你在提问时使用的语言与模型行为决定）。
+6. **Back up data.** Before switching browsers or clearing site data, use **Settings → Data management** to **Export JSON**, then **Import** elsewhere.
+
+7. **UI language.** Toggle **Chinese / English** in the header; this does **not** force answer language—you control tone and wording in prompts.
 
 ---
 
-## 技术栈（概览）
+## Tech stack
 
-- **Next.js**（App Router）、**React**、**TypeScript**
-- 本地状态与持久化：**IndexedDB**；业务与 UI 逻辑分离在 `src/domain` 与组件中
-- 测试：**Vitest**、**Playwright**（e2e 脚本可按需运行）
+- **Next.js** (App Router), **React**, **TypeScript**, **Tailwind CSS**
+- Persistence: **IndexedDB**; logic split across `src/domain` and components
+- Testing: **Vitest**, **Playwright** (`npm run test`, `npm run test:e2e`)
 
 ---
 
-## 生产构建
+## Production & Cloudflare
+
+Standard Next.js production run:
 
 ```bash
 npm run build
 npm start
 ```
 
-默认 `npm start` 使用端口 `3000`（见 `package.json` 中的 `start` 脚本）。
+`npm start` serves on port **3000** (see `package.json`).
+
+For **Cloudflare** (preview / deploy):
+
+```bash
+npm run preview   # OpenNext preview
+npm run deploy    # Deploy with OpenNext for Cloudflare
+```
 
 ---
 
-## 隐私与安全提示
+## Privacy & safety
 
-- API Key 与学习内容主要留在**你的浏览器**；提问时 Key 会发往**你部署的**应用服务端，再转发到所选模型 / 搜索服务商。请勿在不可信设备上保留 Key，使用完毕可在 Settings 中清除。
-- 服务端环境变量若已配置 Key，可与浏览器中的配置配合使用，具体以后端实现为准。
+- API keys and most learning context stay **in your browser**; when you prompt, keys may reach **your** deployment’s server before third-party APIs. Avoid saving keys on untrusted devices—clear them in **Settings** when done.
+- If the server exposes shared keys via environment variables, behavior follows your deployment config.
 
 ---
 
-若你改进产品文案或流程，欢迎同步更新本 README，使新读者能直接理解「递归学习」在实践里长什么样。
+Improvements to copy or onboarding are welcome via PRs—keep this README aligned with how “recursive learning” shows up in the product.
