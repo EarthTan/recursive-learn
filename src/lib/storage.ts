@@ -21,7 +21,12 @@ type BackupPayload = {
 };
 
 function stripTransientState(state: AppState): AppState {
-  return { ...state, createChildStreamUi: null, askSetupBanner: null };
+  return {
+    ...state,
+    previousNodeIdForBack: null,
+    createChildStreamUi: null,
+    askSetupBanner: null
+  };
 }
 
 function loadLegacyState(): AppState | null {

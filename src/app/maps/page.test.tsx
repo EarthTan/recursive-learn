@@ -39,6 +39,7 @@ function emptyState(): AppState {
     nodes: [],
     activeMapRootId: "",
     activeNodeId: "",
+    previousNodeIdForBack: null,
     createChildStreamUi: null,
     askSetupBanner: null
   };

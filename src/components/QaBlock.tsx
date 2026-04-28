@@ -21,7 +21,7 @@ export function QaQuestion({ children, variant = "lead", className = "" }: QaQue
     <div
       className={[
         "rounded-ml border border-ml-blue/20 bg-gradient-to-b from-ml-blue-soft/95 to-ml-blue-soft/45",
-        isLead ? "px-4 py-3.5 shadow-sm" : "mb-3 px-3.5 py-2.5 shadow-[0_1px_0_rgba(0,102,255,0.06)]",
+        isLead ? "px-4 py-3.5 shadow-sm" : "mb-3 px-3.5 py-2.5 shadow-[0_1px_0_rgba(0,102,255,0.06)] dark:shadow-[0_1px_0_rgba(69,136,255,0.12)]",
         className
       ]
         .filter(Boolean)
@@ -65,7 +65,7 @@ export function QaAnswerBox({ children, withHeader = false, className = "" }: Qa
   return (
     <div
       className={[
-        "overflow-hidden rounded-ml border border-ml-hairline bg-ml-preview-bg/95 [box-shadow:inset_0_1px_0_rgba(255,255,255,0.65)]",
+        "overflow-hidden rounded-ml border border-ml-hairline bg-ml-preview-bg/95 [box-shadow:inset_0_1px_0_rgba(255,255,255,0.65)] dark:[box-shadow:inset_0_1px_0_rgba(255,255,255,0.06)]",
         "border-l-[3px] border-l-ml-green/80",
         className
       ]

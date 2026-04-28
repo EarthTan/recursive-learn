@@ -17,7 +17,7 @@ import { IconMapTreeNode } from "./Icons";
 
 /** Softer grid like the design: light, airy. */
 const treeBg =
-  "bg-[radial-gradient(circle,_#d8e0ed_0.7px,transparent_0.7px),#f6f8fc] bg-[length:20px_20px]";
+  "bg-[radial-gradient(circle,_#d8e0ed_0.7px,transparent_0.7px),#f6f8fc] bg-[length:20px_20px] dark:bg-[radial-gradient(circle,_#3a4558_0.7px,transparent_0.7px),#0e131c]";
 
 const w = MAP_TREE_CARD.w;
 const h = MAP_TREE_CARD.h;
@@ -376,9 +376,9 @@ export function TopicNodeTreeView({
                     className={[
                       "group absolute flex cursor-pointer items-center gap-2.5 rounded-ml border px-2.5 py-2",
                       "bg-ml-card text-left",
-                      "shadow-[0_1px_2px_rgba(15,23,42,0.04),0_6px_18px_rgba(15,23,42,0.04)]",
+                      "shadow-[0_1px_2px_rgba(15,23,42,0.04),0_6px_18px_rgba(15,23,42,0.04)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.25),0_6px_18px_rgba(0,0,0,0.22)]",
                       "transition-[box-shadow,transform,border-color] duration-200",
-                      "hover:-translate-y-px hover:shadow-[0_2px_8px_rgba(15,23,42,0.07),0_10px_24px_rgba(15,23,42,0.06)]",
+                      "hover:-translate-y-px hover:shadow-[0_2px_8px_rgba(15,23,42,0.07),0_10px_24px_rgba(15,23,42,0.06)] dark:hover:shadow-[0_2px_8px_rgba(0,0,0,0.35),0_10px_24px_rgba(0,0,0,0.28)]",
                       "hover:border-ml-hairline",
                       id === selectedId
                         ? "z-[2] border-2 border-ml-blue shadow-ml-node"

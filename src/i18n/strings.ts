@@ -15,6 +15,10 @@ const en = {
   /** Language name for the English option in the header menu (use “英文” in Chinese UI). */
   localeMenuEnglish: "English",
 
+  /** Header theme toggle accessibility (shows opposite of active theme). */
+  themeSwitchToDark: "Switch to dark mode",
+  themeSwitchToLight: "Switch to light mode",
+
   // Home
   homeHeroTitle: "Learn the recursive way",
   homeSubtitle:
@@ -142,6 +146,7 @@ const en = {
   nodeDelete: "Delete node",
   nodeLearningTrace: "Learning trace",
   nodeFullMap: "Full tree",
+  nodeBackPrevious: "Back to previous node",
   nodeAddAsChild: "Add as child node",
   nodeJustAskLabel: "Just ask",
   nodeAskQuestion: "Ask a question",
@@ -235,6 +240,9 @@ const zh: { [K in keyof typeof en]: string } = {
   langEnglish: "English",
   langChinese: "中文",
   localeMenuEnglish: "英文",
+
+  themeSwitchToDark: "切换到深色模式",
+  themeSwitchToLight: "切换到浅色模式",
 
   homeHeroTitle: "用递归法学习",
   homeSubtitle:
@@ -353,6 +361,7 @@ const zh: { [K in keyof typeof en]: string } = {
   nodeDelete: "删除节点",
   nodeLearningTrace: "学习路径",
   nodeFullMap: "整棵树",
+  nodeBackPrevious: "返回上一节点",
   nodeAddAsChild: "加为子节点",
   nodeJustAskLabel: "随便问问",
   nodeAskQuestion: "提问",

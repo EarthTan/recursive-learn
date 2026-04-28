@@ -126,7 +126,7 @@ export default function MapsIndexPage() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={t("homeTopicPlaceholder")}
-          className="min-h-12 min-w-[240px] flex-1 rounded-ml-sm border border-ml-line bg-ml-card px-4 py-3 text-[0.95rem] text-ml-ink shadow-ml-card outline-none transition-[border-color,box-shadow] placeholder:text-ml-muted focus:border-ml-blue focus:shadow-[0_0_0_3px_rgba(0,102,255,0.12)]"
+          className="min-h-12 min-w-[240px] flex-1 rounded-ml-sm border border-ml-line bg-ml-card px-4 py-3 text-[0.95rem] text-ml-ink shadow-ml-card outline-none transition-[border-color,box-shadow] placeholder:text-ml-muted focus:border-ml-blue focus:shadow-ml-focus"
         />
         <button
           type="button"

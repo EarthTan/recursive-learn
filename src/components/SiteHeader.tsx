@@ -4,12 +4,15 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/i18n/locale-context";
 import { useAppState } from "@/state/app-state-context";
+import { useTheme } from "@/theme/theme-context";
 import {
   IconChevronDown,
   IconLanguage,
   IconLearningMap,
+  IconMoon,
   IconSearch,
   IconSettings,
+  IconSun,
   LogoMark
 } from "./Icons";
 
@@ -24,6 +27,7 @@ const navLink = (active: boolean) =>
 
 export function SiteHeader() {
   const { t, locale, setLocale } = useLocale();
+  const { theme, toggleTheme } = useTheme();
   const { state } = useAppState();
   const [path, setPath] = useState("");
   const [langOpen, setLangOpen] = useState(false);
@@ -89,6 +93,24 @@ export function SiteHeader() {
             <IconSettings />
             <span>{t("navSettings")}</span>
           </Link>
+          <button
+            type="button"
+            className={[
+              "inline-flex cursor-pointer items-center gap-2 border-b-2 border-transparent px-3.5 pb-3 -mb-px",
+              "text-[0.92rem] font-medium text-ml-ink no-underline",
+              "hover:text-ml-blue",
+              "transition-[color] [&_svg]:text-ml-muted hover:[&_svg]:text-ml-blue"
+            ].join(" ")}
+            aria-label={theme === "dark" ? t("themeSwitchToLight") : t("themeSwitchToDark")}
+            aria-pressed={theme === "dark"}
+            onClick={() => toggleTheme()}
+          >
+            {theme === "dark" ? (
+              <IconSun className="h-[1em] w-[1em] shrink-0" aria-hidden />
+            ) : (
+              <IconMoon className="h-[1em] w-[1em] shrink-0" aria-hidden />
+            )}
+          </button>
           <div className="relative shrink-0" ref={langMenuRef}>
             <button
               type="button"
@@ -115,7 +137,7 @@ export function SiteHeader() {
             </button>
           {langOpen ? (
             <ul
-              className="absolute right-0 top-[calc(100%+6px)] z-[200] m-0 min-w-[7.5rem] list-none overflow-hidden rounded-ml-sm border border-ml-line bg-ml-card p-0 py-1 shadow-[0_12px_32px_rgba(15,23,42,0.12),0_0_0_1px_rgba(15,23,42,0.04)]"
+              className="absolute right-0 top-[calc(100%+6px)] z-[200] m-0 min-w-[7.5rem] list-none overflow-hidden rounded-ml-sm border border-ml-line bg-ml-card p-0 py-1 shadow-[0_12px_32px_rgba(15,23,42,0.12),0_0_0_1px_rgba(15,23,42,0.04)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.06)]"
               role="listbox"
               aria-label={t("navLanguage")}
             >

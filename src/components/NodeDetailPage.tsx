@@ -37,6 +37,7 @@ import { PathTraceTreeView } from "./TopicNodeTreeView";
 import {
   IconArrowRight,
   IconCheckCircle,
+  IconChevronRight,
   IconDot,
   IconExternalLink,
   IconGlobe,
@@ -149,6 +150,10 @@ export function NodeDetailPage({
     getRootNode(state.nodes, state.activeMapRootId) ??
     (node ? getRootNode(state.nodes, node.mapRootId) : undefined);
   const path = getNodePath(state.nodes, node.id);
+  const backTargetId = state.previousNodeIdForBack;
+  const backTarget =
+    backTargetId != null ? state.nodes.find((n) => n.id === backTargetId) : undefined;
+  const showBackToPrevious = backTarget != null;
   const justAskEntries = node.justAskEntries ?? [];
   const createStream = state.createChildStreamUi;
   const showTitleGenerating =
@@ -865,6 +870,19 @@ export function NodeDetailPage({
               <IconExternalLink className="h-3.5 w-3.5" />
             </Link>
           </div>
+          {showBackToPrevious ? (
+            <div className="mb-3">
+              <button
+                type="button"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-ml-sm border border-ml-line bg-ml-preview-bg px-3 py-2 text-[0.85rem] font-semibold text-ml-ink transition-colors hover:border-ml-hairline hover:bg-ml-card"
+                onClick={() => router.push(`/nodes/${backTarget.id}`)}
+                title={backTarget.title}
+              >
+                <IconChevronRight className="h-3.5 w-3.5 shrink-0 rotate-180" aria-hidden />
+                {t("nodeBackPrevious")}
+              </button>
+            </div>
+          ) : null}
           <PathTraceTreeView
             state={state}
             mapRootId={mapRoot.id}

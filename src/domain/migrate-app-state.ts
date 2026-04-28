@@ -17,6 +17,7 @@ function stripLegacyConceptLayer(state: Record<string, unknown>): AppState {
     nodes,
     activeMapRootId: state.activeMapRootId as string,
     activeNodeId: state.activeNodeId as string,
+    previousNodeIdForBack: (state.previousNodeIdForBack ?? null) as string | null,
     createChildStreamUi: (state.createChildStreamUi ?? null) as AppState["createChildStreamUi"],
     askSetupBanner: (state.askSetupBanner ?? null) as AppState["askSetupBanner"]
   };

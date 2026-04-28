@@ -45,6 +45,11 @@ export type AppState = {
   /** Root node id of the map in focus (same as that root’s `id`). */
   activeMapRootId: string;
   activeNodeId: string;
+  /**
+   * Last node before the current `activeNodeId` (session-only; stripped when persisting).
+   * Used for “back to previous node” on the detail page.
+   */
+  previousNodeIdForBack: string | null;
   createChildStreamUi: CreateChildStreamUi;
   askSetupBanner: AskSetupBanner;
 };
@@ -63,7 +68,12 @@ export function setNodeMastery(state: AppState, nodeId: string, status: NodeStat
 }
 
 export function setActiveNodeId(state: AppState, activeNodeId: string): AppState {
-  return { ...state, activeNodeId };
+  if (state.activeNodeId === activeNodeId) return state;
+  return {
+    ...state,
+    activeNodeId,
+    previousNodeIdForBack: state.activeNodeId
+  };
 }
 
 /** 流式过程中一旦解析出最终标题，可先更新节点名（如 LLM 已写出标题行而正文未结束）。 */
@@ -113,7 +123,12 @@ export function setCreateChildStreamTitleReady(state: AppState, childId: string)
 
 export function addPlaceholderChild(state: AppState, parentId: string, question: string): AppState {
   const { nodes, child } = createPlaceholderChildNode(state.nodes, parentId, question);
-  return { ...state, nodes, activeNodeId: child.id };
+  return {
+    ...state,
+    nodes,
+    activeNodeId: child.id,
+    previousNodeIdForBack: state.activeNodeId
+  };
 }
 
 export function replaceChildFirstBlockAnswer(state: AppState, childId: string, answer: string): AppState {
@@ -158,6 +173,7 @@ export function removePlaceholderChild(state: AppState, childId: string, parentI
     ...state,
     nodes: state.nodes.filter((n) => n.id !== childId),
     activeNodeId: parentId,
+    previousNodeIdForBack: state.activeNodeId,
     createChildStreamUi: null
   };
 }
@@ -196,10 +212,14 @@ export function finalizeCreateChild(
     }
   }
 
+  const activeNodeId = childId;
+  const previousNodeIdForBack =
+    state.activeNodeId === activeNodeId ? state.previousNodeIdForBack : state.activeNodeId;
   return {
     ...state,
     nodes: state.nodes.map((n) => (n.id === childId ? updatedChild : n)),
-    activeNodeId: childId,
+    activeNodeId,
+    previousNodeIdForBack,
     createChildStreamUi: null
   };
 }
@@ -216,7 +236,8 @@ export function setActiveMapByRootId(state: AppState, mapRootId: string): AppSta
   return {
     ...state,
     activeMapRootId: mapRootId,
-    activeNodeId: root.id
+    activeNodeId: root.id,
+    previousNodeIdForBack: null
   };
 }
 
@@ -230,6 +251,7 @@ export function createInitialState(rootTitle: string): AppState {
     nodes: session.nodes,
     activeMapRootId: rootId,
     activeNodeId: session.activeNodeId,
+    previousNodeIdForBack: null,
     createChildStreamUi: null,
     askSetupBanner: null
   };
@@ -247,6 +269,7 @@ export function createRootNode(state: AppState, title: string): AppState {
     nodes: [...state.nodes, ...session.nodes],
     activeMapRootId: rootId,
     activeNodeId: session.activeNodeId,
+    previousNodeIdForBack: null,
     createChildStreamUi: null,
     askSetupBanner: null
   };
@@ -323,6 +346,7 @@ export function deleteNodeAndSubtree(state: AppState, nodeId: string): AppState 
     nodes: nextNodes,
     activeMapRootId,
     activeNodeId,
+    previousNodeIdForBack: null,
     createChildStreamUi,
     askSetupBanner
   };
@@ -366,7 +390,8 @@ export function handleAskResult(
   return {
     ...state,
     nodes: [...state.nodes, child],
-    activeNodeId: child.id
+    activeNodeId: child.id,
+    previousNodeIdForBack: state.activeNodeId
   };
 }
 

@@ -234,7 +234,7 @@ export function LearningMapPage({
                 </Link>
                 <button
                   type="button"
-                  className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-ml-sm border border-ml-line bg-ml-card px-5 py-2.5 text-[0.88rem] font-semibold text-ml-error shadow-ml-card hover:bg-red-50"
+                  className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-ml-sm border border-ml-line bg-ml-card px-5 py-2.5 text-[0.88rem] font-semibold text-ml-error shadow-ml-card hover:bg-red-50 dark:hover:bg-red-950/40"
                   onClick={() => setPendingDeleteNodeId(selected.id)}
                 >
                   <IconTrash className="h-4 w-4 shrink-0" />

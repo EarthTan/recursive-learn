@@ -53,7 +53,7 @@ export default function SearchPage() {
           placeholder={t("searchPlaceholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="min-h-12 w-full max-w-2xl rounded-ml-sm border border-ml-line bg-ml-card px-4 py-3 text-[0.95rem] text-ml-ink shadow-ml-card outline-none transition-[border-color,box-shadow] placeholder:text-ml-muted focus:border-ml-blue focus:shadow-[0_0_0_3px_rgba(0,102,255,0.12)]"
+          className="min-h-12 w-full max-w-2xl rounded-ml-sm border border-ml-line bg-ml-card px-4 py-3 text-[0.95rem] text-ml-ink shadow-ml-card outline-none transition-[border-color,box-shadow] placeholder:text-ml-muted focus:border-ml-blue focus:shadow-ml-focus"
         />
       </div>
       {showHint ? (

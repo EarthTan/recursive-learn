@@ -69,7 +69,7 @@ export function ConfirmDialog({
         aria-describedby={descId}
         className={[
           "relative z-[1] w-full max-w-[400px] rounded-ml border border-ml-line bg-ml-card",
-          "p-6 shadow-[0_24px_48px_rgba(15,23,42,0.12),0_0_0_1px_rgba(15,23,42,0.04)]"
+          "p-6 shadow-[0_24px_48px_rgba(15,23,42,0.12),0_0_0_1px_rgba(15,23,42,0.04)] dark:shadow-[0_24px_48px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.06)]"
         ].join(" ")}
       >
         <h2 id={titleId} className="m-0 text-[1.1rem] font-semibold leading-snug tracking-tight text-ml-ink">
