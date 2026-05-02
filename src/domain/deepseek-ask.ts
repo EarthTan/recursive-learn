@@ -12,7 +12,10 @@ export type LlmRouting = {
   model: string;
 };
 
-const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
+const ANTHROPIC_MESSAGES_URLS = {
+  claude: "https://api.anthropic.com/v1/messages",
+  minimax: "https://api.minimaxi.com/anthropic/v1/messages"
+} as const;
 
 function trimBaseUrl(base: string): string {
   return base.replace(/\/+$/, "");
@@ -209,13 +212,15 @@ async function streamOpenAiCompatibleDeltas(
  * Anthropic Messages API SSE (`content_block_delta` with `text_delta`).
  */
 async function streamAnthropicText(
+  endpoint: string,
   model: string,
   apiKey: string,
   system: string,
   userContent: string,
-  onToken: (delta: string) => void
+  onToken: (delta: string) => void,
+  errorLabel: string
 ): Promise<string> {
-  const res = await fetch(ANTHROPIC_MESSAGES_URL, {
+  const res = await fetch(endpoint, {
     method: "POST",
     headers: {
       "x-api-key": apiKey,
@@ -232,10 +237,10 @@ async function streamAnthropicText(
   });
   if (!res.ok) {
     const errBody = await res.text();
-    throw new Error(`Anthropic API ${res.status}: ${errBody.slice(0, 800)}`);
+    throw new Error(`${errorLabel} ${res.status}: ${errBody.slice(0, 800)}`);
   }
   if (!res.body) {
-    throw new Error("Anthropic returned an empty body.");
+    throw new Error(`${errorLabel} returned an empty body.`);
   }
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
@@ -290,87 +295,6 @@ function providerErrorLabel(provider: LlmProviderId): string {
   return `${provider} API`;
 }
 
-+/**
-+ * MiniMax requires special stream handling: use stream: "minimax" format or filter response properly.
-+ * Reference: https://platform.minimaxi.com/document/chat-completion
-+ */
-+async function streamMiniMaxCompatible(
-+  model: string,
-+  apiKey: string,
-+  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
-+  onToken: (delta: string) => void
-+): Promise<string> {
-+  const baseUrl = "https://api.minimaxi.com/v1";
-+  const res = await fetch(`${baseUrl}/chat/completions`, {
-+    method: "POST",
-+    headers: {
-+      Authorization: `Bearer ${apiKey}`,
-+      "Content-Type": "application/json"
-+    },
-+    body: JSON.stringify({
-+      model,
-+      temperature: 0.45,
-+      stream: true,
-+      stream_options: { include_usage: false },
-+      messages
-+    })
-+  });
-+  if (!res.ok) {
-+    const errBody = await res.text();
-+    throw new Error(`minimax API ${res.status}: ${errBody.slice(0, 800)}`);
-+  }
-+  if (!res.body) {
-+    throw new Error("minimax returned an empty body.");
-+  }
-+  const reader = res.body.getReader();
-+  const decoder = new TextDecoder();
-+  let buffer = "";
-+  let full = "";
-+  // Track if we've started seeing actual model output (after protocol markers or initial content)
-+  let foundRealOutput = false;
-+  while (true) {
-+    const { value, done } = await reader.read();
-+    if (done) break;
-+    buffer += decoder.decode(value, { stream: true });
-+    for (;;) {
-+      const n = buffer.indexOf("\n");
-+      if (n < 0) break;
-+      let line = buffer.slice(0, n);
-+      buffer = buffer.slice(n + 1);
-+      if (line.endsWith("\r")) line = line.slice(0, -1);
-+      const t = line.trim();
-+      if (!t.startsWith("data: ")) continue;
-+      const data = t.slice(6);
-+      if (data === "[DONE]") continue;
-+      try {
-+        const json = JSON.parse(data) as {
-+          choices?: Array<{ delta?: { content?: string | null } }>;
-+        };
-+        const c = json.choices?.[0]?.delta?.content;
-+        if (c) {
-+          // Filter: MiniMax sometimes echoes context; skip prompt echoes
-+          // Skip if it looks like user/system prompt repetition
-+          if (c.includes("---ML-") || c.includes("最新问题") || c.includes("Latest question")) {
-+            foundRealOutput = true; // We found real model output with markers
-+          }
-+          // Skip pure prompt-echo patterns ONLY if we haven't found real output yet
-+          const isPromptEcho =
-+            !foundRealOutput &&
-+            (c.includes("用户此前已进行多轮问与答") || c.includes("The user has already gone"));
-+          if (!isPromptEcho) {
-+            foundRealOutput = true;
-+            full += c;
-+            onToken(c);
-+          }
-+        }
-+      } catch {
-+        // skip invalid JSON
-+      }
-+    }
-+  }
-+  return full.trim();
-+}
-+
 /**
  * Stream tokens from the configured LLM; returns the full answer (trimmed) for persistence.
  */
@@ -381,19 +305,24 @@ export async function streamLlmJustAsk(
 ): Promise<string> {
   if (routing.provider === "claude") {
     return streamAnthropicText(
+      ANTHROPIC_MESSAGES_URLS.claude,
       routing.model,
       routing.apiKey,
       justAskSystem(ctx.locale),
       getJustAskUserContent(ctx),
-      onToken
-    +  if (routing.provider === "minimax") {
-    +    return streamMiniMaxCompatible(
-    +      routing.model,
-    +      routing.apiKey,
-    +      getJustAskMessages(ctx),
-    +      onToken
-    +    );
-    +  }
+      onToken,
+      providerErrorLabel(routing.provider)
+    );
+  }
+  if (routing.provider === "minimax") {
+    return streamAnthropicText(
+      ANTHROPIC_MESSAGES_URLS.minimax,
+      routing.model,
+      routing.apiKey,
+      justAskSystem(ctx.locale),
+      getJustAskUserContent(ctx),
+      onToken,
+      providerErrorLabel(routing.provider)
     );
   }
   const base = openAiCompatibleBase(routing.provider);
@@ -423,26 +352,28 @@ export async function streamLlmCreateChildProtocol(
   const full =
     routing.provider === "claude"
       ? await streamAnthropicText(
+          ANTHROPIC_MESSAGES_URLS.claude,
           routing.model,
           routing.apiKey,
           sys,
           user,
           (delta) => {
             onBodyDelta(parser.append(delta));
-          }
+          },
+          providerErrorLabel(routing.provider)
         )
-      +      : routing.provider === "minimax"
-      +      ? await streamMiniMaxCompatible(
-      +          routing.model,
-      +          routing.apiKey,
-      +          [
-      +            { role: "system", content: sys },
-      +            { role: "user", content: user }
-      +          ],
-      +          (delta) => {
-      +            onBodyDelta(parser.append(delta));
-      +          }
-      +        )
+      : routing.provider === "minimax"
+      ? await streamAnthropicText(
+          ANTHROPIC_MESSAGES_URLS.minimax,
+          routing.model,
+          routing.apiKey,
+          sys,
+          user,
+          (delta) => {
+            onBodyDelta(parser.append(delta));
+          },
+          providerErrorLabel(routing.provider)
+        )
       : await streamOpenAiCompatibleDeltas(
           openAiCompatibleBase(routing.provider),
           routing.model,
