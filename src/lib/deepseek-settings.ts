@@ -70,8 +70,8 @@ export const LLM_PROVIDER_OPTIONS: Array<{
   {
     id: "minimax",
     label: "MiniMax",
-    hint: "API key from MiniMax; OpenAI-compatible international endpoint.",
-    defaultModel: "MiniMax-Text-01"
+    hint: "API key from platform.minimaxi.com; supports OpenAI-compatible endpoint (base: api.minimaxi.com/v1).",
+    defaultModel: "MiniMax-M2.7"
   }
 ];
 
